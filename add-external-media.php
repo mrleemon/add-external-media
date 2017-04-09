@@ -3,7 +3,7 @@
   Plugin Name: Add External Media
   Plugin URI: http://wordpress.org/plugins/add-external-media/
   Description: Add external media to the media library
-  Version: 1.0.3
+  Version: 1.0.4
   Author: leemon
   Text Domain: add-external-media
   License: GPLv2 or later
@@ -22,23 +22,88 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-require_once ABSPATH . WPINC . '/class-oembed.php';
-
 class AddExternalMedia {  
 
-    function __construct() {  
-  
-        add_action( 'admin_enqueue_scripts', array($this, 'admin_enqueue_scripts' ) );
+	/**
+	 * Plugin instance.
+	 *
+	 * @since 1.0
+	 *
+	 */
+	protected static $instance = null;
+
+
+	/**
+	 * Access this plugin’s working instance
+	 *
+	 * @since 1.0
+	 *
+	 */
+	public static function get_instance() {
+		
+		if ( !self::$instance ) {
+			self::$instance = new self;
+		}
+
+		return self::$instance;
+
+	}
+
+	
+	/**
+	 * Used for regular plugin work.
+	 *
+	 * @since 1.0
+	 *
+	 */
+	public function plugin_setup() {
+
+  		$this->includes();
+
+		add_action( 'init', array( $this, 'load_language' ) );
+		add_action( 'wp_enqueue_media', array($this, 'admin_enqueue_scripts' ) );
 		add_action( 'wp_ajax_add-oembed', array($this, 'add_oembed' ) );
 		add_action( 'print_media_templates', array($this, 'print_media_templates' ) );
 		add_filter( 'attachment_fields_to_edit', array($this, 'attachment_fields_to_edit' ), null, 2 );
 		add_filter( 'attachment_fields_to_save', array($this, 'attachment_fields_to_save' ), null, 2 );
 		add_filter( 'media_view_strings', array($this, 'media_view_strings' ), 10, 2 );
 		add_filter( 'wp_prepare_attachment_for_js', array($this, 'wp_prepare_attachment_for_js' ), 10, 3 );
-		load_plugin_textdomain( 'add-external-media' );
+	
+	}
 
-    }  
- 
+	
+	/**
+	 * Constructor. Intentionally left empty and public.
+	 *
+	 * @since 1.0
+	 *
+	 */
+	public function __construct() {}
+
+	
+	
+ 	/**
+	 * Includes required core files used in admin and on the frontend.
+	 *
+	 * @since 1.0
+	 *
+	 */
+	protected function includes() {
+		require_once ABSPATH . WPINC . '/class-oembed.php';
+	}
+
+
+	/**
+	 * Loads language
+	 *
+	 * @since 1.0
+	 *
+	 */
+	function load_language() {
+		load_plugin_textdomain( 'add-external-media' );
+	}
+
+	
 	/**
 	 * Enqueues scripts in the backend.
 	 *
@@ -46,9 +111,7 @@ class AddExternalMedia {
 	 *
 	 */
     function admin_enqueue_scripts(){  
-
-		wp_enqueue_script( 'add-external-media', plugins_url('/add-external-media.js', __FILE__), array('media-models', 'media-views'), false, true );
-		
+		wp_enqueue_script( 'add-external-media', plugins_url( '/add-external-media.js', __FILE__), array( 'media-models', 'media-views' ), false, true );
     }
 
 	
@@ -59,10 +122,10 @@ class AddExternalMedia {
 	 *
 	 */
 	function add_oembed() {
-		$url = trim($_POST['url']);
-		$width = absint($_POST['width']);
-		$height = absint($_POST['height']);
-		$post_ID = intval($_POST['post_id']);
+		$url = trim( $_POST['url'] );
+		$width = absint( $_POST['width'] );
+		$height = absint( $_POST['height'] );
+		$post_ID = intval( $_POST['post_id'] );
 		$nonce = $_POST['nonce'];
 		
 		if ( !wp_verify_nonce( $nonce, 'update-post_' . $post_ID ) ) {
@@ -76,14 +139,14 @@ class AddExternalMedia {
 		$oembed = new WP_oEmbed();
 		$provider = $oembed->get_provider( $url );
 		if ( $provider === false && substr($url, 0, 5) === 'https' ) {
-			$url = str_replace('https', 'http', $url);
+			$url = str_replace( 'https', 'http', $url );
 			$provider = $oembed->get_provider( $url );
 		}
 		if ( $provider === false ) {
 			wp_send_json_error();
 		}
 
-		$response = $oembed->fetch($provider, $url);
+		$response = $oembed->fetch( $provider, $url );
 		if ( $response === false ) {
 			wp_send_json_error();
 		}
@@ -96,18 +159,18 @@ class AddExternalMedia {
 			'post_author'   => get_current_user_id(),
 			'post_type'     => 'attachment',
 			'guid'          => $url,
-			'post_mime_type'=> 'oembed/' . strtolower($response->provider_name)
+			'post_mime_type'=> 'oembed/' . strtolower( $response->provider_name )
 		);
 		$attachment_id = wp_insert_post( $attachment );
-		if( ! is_int($attachment_id) ) {
+		if( ! is_int( $attachment_id ) ) {
 			wp_send_json_error();
 		}
 
-		$width = ( !empty($width) ? $width : 400 );
-		$height = ( !empty($height) ? $height : 400 );
+		$width = ( !empty( $width ) ? $width : 400 );
+		$height = ( !empty( $height ) ? $height : 400 );
 		
-		update_post_meta($attachment_id, '_oembed_width', $width);
-		update_post_meta($attachment_id, '_oembed_height', $height);
+		update_post_meta( $attachment_id, '_oembed_width', $width );
+		update_post_meta( $attachment_id, '_oembed_height', $height );
 
 		if ( ! $attachment_js = wp_prepare_attachment_for_js( $attachment_id ) ) {
 			wp_send_json_error();
@@ -125,18 +188,18 @@ class AddExternalMedia {
 	 *
 	 */
 	function attachment_fields_to_edit($form_fields, $post) {
-		$mime = get_post_mime_type($post->ID);
-		$type = strtok($mime, '/');
-		if ($type == 'oembed') {
+		$mime = get_post_mime_type( $post->ID );
+		$type = strtok( $mime, '/' );
+		if ( $type == 'oembed' ) {
 			$form_fields['width'] = array(
-				'label' => __('Width'),
+				'label' => __( 'Width' ),
 				'input' => 'text',
-				'value' => get_post_meta($post->ID, '_oembed_width', true)
+				'value' => get_post_meta( $post->ID, '_oembed_width', true )
 			);
 			$form_fields['height'] = array(
-				'label' => __('Height'),
+				'label' => __( 'Height' ),
 				'input' => 'text',
-				'value' => get_post_meta($post->ID, '_oembed_height', true)
+				'value' => get_post_meta( $post->ID, '_oembed_height', true )
 			);
 		}
 		return $form_fields;
@@ -151,10 +214,10 @@ class AddExternalMedia {
 	 */
 	function attachment_fields_to_save($post, $attachment) {
 		if( isset($attachment['width']) ){
-			update_post_meta($post['ID'], '_oembed_width', $attachment['width']);
+			update_post_meta( $post['ID'], '_oembed_width', $attachment['width'] );
 		}
 		if( isset($attachment['height']) ){
-			update_post_meta($post['ID'], '_oembed_height', $attachment['height']);
+			update_post_meta( $post['ID'], '_oembed_height', $attachment['height'] );
 		}
 		return $post;
 	}
@@ -192,7 +255,7 @@ class AddExternalMedia {
 	 *
 	 */
 	function media_view_strings($strings, $post){
-		$strings['AddExternalMediaMenuTitle'] = __( 'Add External Media', 'add-external-media' );
+		$strings['AddExternalMediaMenuTitle'] = _x( 'Add External Media', 'menu item', 'add-external-media' );
 		$strings['AddExternalMediaButton'] = __( 'Add to library', 'add-external-media' );
 		return $strings;
 	}
@@ -205,9 +268,9 @@ class AddExternalMedia {
 	 *
 	 */
 	function wp_prepare_attachment_for_js($response, $attachment, $meta) {
-		if ($response['type'] == 'oembed') {
-			if ($response['title'] != '') {
-				$response['filename'] = mb_strimwidth($response['title'], 0, 25);
+		if ( $response['type'] == 'oembed' ) {
+			if ($response['title'] != '' ) {
+				$response['filename'] = mb_strimwidth( $response['title'], 0, 25 );
 			}
 		}
 		return $response;
@@ -215,6 +278,6 @@ class AddExternalMedia {
 	
 }
 
-$add_external_media = new AddExternalMedia;
+add_action( 'plugins_loaded', array ( AddExternalMedia::get_instance(), 'plugin_setup' ) );
 
 ?>

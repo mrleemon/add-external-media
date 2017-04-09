@@ -3,8 +3,8 @@ Contributors: leemon
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=oscarciutat%40gmail%2ecom
 Tags: media, attachments, admin, external, oembed
 Requires at least: 4.0
-Tested up to: 4.7
-Stable tag: 1.0.3
+Tested up to: 4.7.3
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,10 @@ Some service providers, such as Twitter and Instagram, have a maximum and minimu
 1. Enter the url and size of the external media you'd like to add to the media library here
 
 == Changelog ==
+= 1.0.4 =
+* Code refactoring
+* Hooking the plugin's enqueue function into "wp_enqueue_media" instead of "admin_enqueue_scripts"
+
 = 1.0.3 =
 * Use language packs exclusively
 
