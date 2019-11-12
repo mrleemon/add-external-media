@@ -89,7 +89,7 @@ class AddExternalMedia {
 	 *
 	 */
 	protected function includes() {
-		require_once ABSPATH . WPINC . '/class-oembed.php';
+		require_once ABSPATH . WPINC . '/class-wp-oembed.php';
 	}
 
 
