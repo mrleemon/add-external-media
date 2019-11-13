@@ -3,7 +3,7 @@
   Plugin Name: Add External Media
   Plugin URI: http://wordpress.org/plugins/add-external-media/
   Description: Add external media to the media library
-  Version: 1.0.4
+  Version: 1.0.5
   Author: leemon
   Text Domain: add-external-media
   License: GPLv2 or later
@@ -81,8 +81,7 @@ class AddExternalMedia {
     public function __construct() {}
 
     
-    
-     /**
+    /**
      * Includes required core files used in admin and on the frontend.
      *
      * @since 1.0
